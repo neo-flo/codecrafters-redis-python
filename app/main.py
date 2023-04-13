@@ -46,11 +46,11 @@ class HandleRedisCommand(threading.Thread):
                 commands.append(command)
                 print(f"Command {i // 2 + 1}: {command}")
 
-            if commands[0] == 'ping':
+            if commands[0].lower() == 'ping':
                 send_response(self.client_socket, 'PONG')
-            elif commands[-1] == 'DOCS':
+            elif commands[-1].lower() == 'docs':
                 send_response(self.client_socket, '')
-            elif commands[0] == 'ECHO':
+            elif commands[0].lower() == 'echo':
                 send_response(self.client_socket, commands[-1])
 
 
