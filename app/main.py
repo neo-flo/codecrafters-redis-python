@@ -4,6 +4,7 @@ import socket
 import threading
 
 
+dict = {}
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
@@ -17,6 +18,10 @@ def main():
 
 
 def send_response(client_socket, value):
+    if not value:
+        client_socket.sendall(b'$-1\r\n')
+        return
+
     response = '+{}\r\n'.format(value)
     client_socket.sendall(response.encode('utf-8'))
 
@@ -52,6 +57,12 @@ class HandleRedisCommand(threading.Thread):
                 send_response(self.client_socket, '')
             elif commands[0].lower() == 'echo':
                 send_response(self.client_socket, commands[-1])
+            elif commands[0].lower() == 'get':
+                send_response(self.client_socket, dict.get(commands[1]))
+            elif commands[0].lower() == 'set':
+                dict[commands[1]] = commands[2]
+                send_response(self.client_socket, 'OK')
+
 
 
 if __name__ == "__main__":
