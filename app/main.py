@@ -22,7 +22,7 @@ class RedisCommand(threading.Thread):
         self.client_socket = client_socket
 
     def run(self) -> None:
-        print('------------------------------------')
+        print('-------------------------------------')
         print('client connected\n')
 
         while True:
