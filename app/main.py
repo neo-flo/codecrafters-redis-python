@@ -2,9 +2,11 @@
 # import socket
 import socket
 import threading
+import time
+
+storage = {}
 
 
-dict = {}
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
@@ -58,11 +60,30 @@ class HandleRedisCommand(threading.Thread):
             elif commands[0].lower() == 'echo':
                 send_response(self.client_socket, commands[-1])
             elif commands[0].lower() == 'get':
-                send_response(self.client_socket, dict.get(commands[1]))
+                key = commands[1]
+                value_with_expiry = storage.get(key)
+                if value_with_expiry is None:
+                    send_response(self.client_socket, None)
+                else:
+                    value, expiry_time = value_with_expiry
+                    if expiry_time is not None and expiry_time < time.time():
+                        del storage[key]
+                        send_response(self.client_socket, None)
+                    else:
+                        send_response(self.client_socket, value)
             elif commands[0].lower() == 'set':
-                dict[commands[1]] = commands[2]
-                send_response(self.client_socket, 'OK')
+                key = commands[1]
+                value = commands[2]
+                expiry_seconds = None
 
+                if len(commands) > 3 and commands[-2].lower() == 'px':
+                    expiry_seconds = int(commands[-1])
+                if expiry_seconds is not None:
+                    expiry_time = time.time() + expiry_seconds
+                    storage[key] = (value, expiry_time)
+                else:
+                    storage[key] = (value, None)
+                send_response(self.client_socket, 'OK')
 
 
 if __name__ == "__main__":
