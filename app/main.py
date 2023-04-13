@@ -13,10 +13,15 @@ def main():
     while True:
         # accept connection
         (client_socket, address) = server_socket.accept()
-        RedisCommand(client_socket).start()
+        HandleRedisCommand(client_socket).start()
 
 
-class RedisCommand(threading.Thread):
+def send_response(client_socket, value):
+    response = '+{}\r\n'.format(value)
+    client_socket.sendall(response.encode('utf-8'))
+
+
+class HandleRedisCommand(threading.Thread):
     def __init__(self, client_socket):
         threading.Thread.__init__(self)
         self.client_socket = client_socket
@@ -34,12 +39,19 @@ class RedisCommand(threading.Thread):
                 self.client_socket.close()
                 break
 
-            for line in request.splitlines():
-                print('line : ' + line)
-                if line == 'ping':
-                    self.client_socket.sendall(b'+PONG\r\n')
-                elif line == 'DOCS':
-                    self.client_socket.sendall(b'+\r\n')
+            commands = []
+            lines = request.splitlines()
+            for i in range(1, len(lines), 2):
+                command = lines[i + 1]
+                commands.append(command)
+                print(f"Command {i // 2 + 1}: {command}")
+
+            if commands[0] == 'ping':
+                send_response(self.client_socket, 'PONG')
+            elif commands[-1] == 'DOCS':
+                send_response(self.client_socket, '')
+            elif commands[0] == 'ECHO':
+                send_response(self.client_socket, commands[-1])
 
 
 if __name__ == "__main__":
