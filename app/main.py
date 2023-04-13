@@ -74,12 +74,12 @@ class HandleRedisCommand(threading.Thread):
             elif commands[0].lower() == 'set':
                 key = commands[1]
                 value = commands[2]
-                expiry_seconds = None
+                expiry_milliseconds = None
 
                 if len(commands) > 3 and commands[-2].lower() == 'px':
-                    expiry_seconds = int(commands[-1])
-                if expiry_seconds is not None:
-                    expiry_time = time.time() + expiry_seconds
+                    expiry_milliseconds = int(commands[-1])
+                if expiry_milliseconds is not None:
+                    expiry_time = time.time() + (expiry_milliseconds / 1000.0)
                     storage[key] = (value, expiry_time)
                 else:
                     storage[key] = (value, None)
