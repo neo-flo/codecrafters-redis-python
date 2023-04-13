@@ -18,16 +18,28 @@ def main():
 
 class RedisCommand(threading.Thread):
     def __init__(self, client_socket):
-        print('client connected')
         threading.Thread.__init__(self)
         self.client_socket = client_socket
 
     def run(self) -> None:
-        output = "+PONG\r\n"
-        self.client_socket.send(output.encode('ascii'))
+        print('------------------------------------')
+        print('client connected\n')
 
-        if self.client_socket is not None:
-            self.client_socket.close()
+        while True:
+            request = self.client_socket.recv(1024).decode('utf-8')
+            print('request : ' + request)
+
+            if not request:
+                print('client disconnected\n')
+                self.client_socket.close()
+                break
+
+            for line in request.splitlines():
+                print('line : ' + line)
+                if line == 'ping':
+                    self.client_socket.sendall(b'+PONG\r\n')
+                elif line == 'DOCS':
+                    self.client_socket.sendall(b'+\r\n')
 
 
 if __name__ == "__main__":
